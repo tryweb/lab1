@@ -280,11 +280,41 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_ENABLE_SUMMARY: true
 
-  # 6. 安全掃描結果總結
+  # 6. 程式碼品質掃描 - SonarCloud
+  sonarcloud-scan:
+    runs-on: ubuntu-latest
+    name: SonarCloud 程式碼品質掃描
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout 代碼
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 完整歷史記錄以獲得更好的分析
+
+      - name: 執行 SonarCloud 掃描
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub 自動提供
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    # 需要在 GitHub Secrets 中設定
+        with:
+          args: >
+            -Dsonar.projectKey=${{ github.repository_owner }}_${{ github.event.repository.name }}
+            -Dsonar.organization=${{ github.repository_owner }}
+
+      - name: 檢查 SonarCloud 品質門檻
+        if: always()
+        run: |
+          echo "✅ SonarCloud 掃描完成"
+          echo "📊 詳細報告請至 SonarCloud 查看："
+          echo "   https://sonarcloud.io/dashboard?id=${{ github.repository_owner }}_${{ github.event.repository.name }}"
+
+  # 7. 安全掃描結果總結
   security-summary:
     runs-on: ubuntu-latest
     name: 安全掃描總結
-    needs: [sast-scan, sca-scan, container-scan, iac-scan, secret-scan]
+    needs: [sast-scan, sca-scan, container-scan, iac-scan, secret-scan, sonarcloud-scan]
     if: always()
     outputs:
       all-passed: ${{ steps.check-status.outputs.all-passed }}
@@ -302,6 +332,7 @@ jobs:
           echo "3. 容器映像掃描 - Trivy: ${{ needs.container-scan.result }}"
           echo "4. IaC 安全檢查 - Checkov: ${{ needs.iac-scan.result }}"
           echo "5. Secret 掃描 - Gitleaks: ${{ needs.secret-scan.result }}"
+          echo "6. 程式碼品質掃描 - SonarCloud: ${{ needs.sonarcloud-scan.result }}"
           echo ""
           echo "📊 詳細結果請查看："
           echo "   - Security 標籤 → Code scanning alerts"
@@ -313,7 +344,8 @@ jobs:
              [[ "${{ needs.sca-scan.result }}" == "failure" ]] || \
              [[ "${{ needs.container-scan.result }}" == "failure" ]] || \
              [[ "${{ needs.iac-scan.result }}" == "failure" ]] || \
-             [[ "${{ needs.secret-scan.result }}" == "failure" ]]; then
+             [[ "${{ needs.secret-scan.result }}" == "failure" ]] || \
+             [[ "${{ needs.sonarcloud-scan.result }}" == "failure" ]]; then
             echo "⚠️  警告：部分掃描發現問題，請檢查詳細報告"
             echo "all-passed=false" >> $GITHUB_OUTPUT
           else
@@ -321,7 +353,7 @@ jobs:
             echo "all-passed=true" >> $GITHUB_OUTPUT
           fi
 
-  # 7. 建置並推送 Docker Image 到 GitHub Container Registry
+  # 8. 建置並推送 Docker Image 到 GitHub Container Registry
   build-push-image:
     runs-on: ubuntu-latest
     name: 建置並推送 Docker Image
@@ -376,7 +408,7 @@ jobs:
           echo "🔗 查看 Package："
           echo "https://github.com/${{ github.repository }}/pkgs/container/$(basename ${{ github.repository }})"
 
-  # 8. 建置網站
+  # 9. 建置網站
   build:
     runs-on: ubuntu-latest
     name: 建置網站
@@ -394,7 +426,7 @@ jobs:
         with:
           path: './app'
 
-  # 9. 部署到 GitHub Pages
+  # 10. 部署到 GitHub Pages
   deploy:
     runs-on: ubuntu-latest
     name: 部署到 GitHub Pages
