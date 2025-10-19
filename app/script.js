@@ -263,39 +263,58 @@ function getBestMove() {
     return bestMove;
 }
 
-// Minimax 演算法實現
+// 計算遊戲結束時的分數
+function calculateGameEndScore(result, depth) {
+    if (result === 'O') return 10 - depth;
+    if (result === 'X') return depth - 10;
+    return 0; // 平手
+}
+
+// 計算最大化玩家的最佳分數
+function calculateMaximizingScore(board, depth) {
+    let bestScore = -Infinity;
+    
+    for (let i = 0; i < 9; i++) {
+        if (board[i] === '') {
+            board[i] = 'O';
+            const score = minimax(board, depth + 1, false);
+            board[i] = '';
+            bestScore = Math.max(score, bestScore);
+        }
+    }
+    
+    return bestScore;
+}
+
+// 計算最小化玩家的最佳分數
+function calculateMinimizingScore(board, depth) {
+    let bestScore = Infinity;
+    
+    for (let i = 0; i < 9; i++) {
+        if (board[i] === '') {
+            board[i] = 'X';
+            const score = minimax(board, depth + 1, true);
+            board[i] = '';
+            bestScore = Math.min(score, bestScore);
+        }
+    }
+    
+    return bestScore;
+}
+
+// Minimax 演算法實現（重構後，降低認知複雜度）
 function minimax(board, depth, isMaximizing) {
     const result = checkWinner();
     
+    // 遊戲結束時返回分數
     if (result !== null) {
-        if (result === 'O') return 10 - depth;
-        if (result === 'X') return depth - 10;
-        return 0;
+        return calculateGameEndScore(result, depth);
     }
     
-    if (isMaximizing) {
-        let bestScore = -Infinity;
-        for (let i = 0; i < 9; i++) {
-            if (board[i] === '') {
-                board[i] = 'O';
-                let score = minimax(board, depth + 1, false);
-                board[i] = '';
-                bestScore = Math.max(score, bestScore);
-            }
-        }
-        return bestScore;
-    } else {
-        let bestScore = Infinity;
-        for (let i = 0; i < 9; i++) {
-            if (board[i] === '') {
-                board[i] = 'X';
-                let score = minimax(board, depth + 1, true);
-                board[i] = '';
-                bestScore = Math.min(score, bestScore);
-            }
-        }
-        return bestScore;
-    }
+    // 根據玩家類型選擇對應的計算函數
+    return isMaximizing ?
+        calculateMaximizingScore(board, depth) :
+        calculateMinimizingScore(board, depth);
 }
 
 // 檢查勝者（用於 Minimax）

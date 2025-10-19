@@ -321,10 +321,69 @@ function getApiConfig() {
    - 提供密碼學安全的隨機數選項
    - 詳細註解說明使用場景
 
-4. **敏感資訊保護**
+4. **程式碼品質改善**
+   - 降低函數的認知複雜度
+   - 重構複雜邏輯為更小的專責函數
+   - 提高程式碼可讀性和可維護性
+
+5. **敏感資訊保護**
    - 不在程式碼中硬編碼密碼、金鑰
    - 使用環境變數或安全的配置管理
    - 在日誌中避免輸出敏感資訊
+
+#### 4. 程式碼複雜度優化
+**修復前：**
+```javascript
+// 認知複雜度 17，超過允許的 15
+function minimax(board, depth, isMaximizing) {
+    const result = checkWinner();
+    if (result !== null) {
+        if (result === 'O') return 10 - depth;
+        if (result === 'X') return depth - 10;
+        return 0;
+    }
+    if (isMaximizing) {
+        let bestScore = -Infinity;
+        for (let i = 0; i < 9; i++) {
+            if (board[i] === '') {
+                // 複雜的內嵌邏輯...
+            }
+        }
+    } else {
+        // 更多複雜邏輯...
+    }
+}
+```
+
+**修復後：**
+```javascript
+// 將複雜邏輯拆分成專責函數，降低認知複雜度
+function calculateGameEndScore(result, depth) {
+    if (result === 'O') return 10 - depth;
+    if (result === 'X') return depth - 10;
+    return 0;
+}
+
+function calculateMaximizingScore(board, depth) {
+    // 處理最大化玩家邏輯
+}
+
+function calculateMinimizingScore(board, depth) {
+    // 處理最小化玩家邏輯
+}
+
+function minimax(board, depth, isMaximizing) {
+    const result = checkWinner();
+    if (result !== null) {
+        return calculateGameEndScore(result, depth);
+    }
+    return isMaximizing ?
+        calculateMaximizingScore(board, depth) :
+        calculateMinimizingScore(board, depth);
+}
+```
+
+**說明：** 將原本認知複雜度為 17 的函數重構為多個專責函數，每個函數只負責一個特定任務。主函數使用簡潔的三元運算符，大幅提升程式碼可讀性和可維護性。
 
 #### 3. 偽隨機數生成器安全性
 **修復前：**
