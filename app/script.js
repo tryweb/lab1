@@ -165,6 +165,25 @@ function computerMove() {
     }
 }
 
+// 安全的隨機數生成器
+function getSecureRandomInt(max) {
+    // 注意：對於遊戲邏輯，Math.random() 是安全的，因為不涉及安全敏感的操作
+    // 這裡使用 Math.random() 僅用於遊戲 AI 的隨機選擇，不涉及加密或身份驗證
+    // 如果需要密碼學安全的隨機數，應使用 crypto.getRandomValues()
+    
+    if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+        // 瀏覽器環境：使用密碼學安全的隨機數生成器（可選，用於示範）
+        // 但對於遊戲邏輯，這是過度設計
+        const array = new Uint32Array(1);
+        window.crypto.getRandomValues(array);
+        return Math.floor((array[0] / (0xFFFFFFFF + 1)) * max);
+    } else {
+        // 對於遊戲邏輯，Math.random() 是足夠且安全的
+        // 此用途不涉及安全敏感操作，不需要密碼學級別的隨機性
+        return Math.floor(Math.random() * max);
+    }
+}
+
 // 簡單難度：隨機移動
 function getRandomMove() {
     const availableMoves = [];
@@ -176,12 +195,14 @@ function getRandomMove() {
     
     if (availableMoves.length === 0) return -1;
     
-    return availableMoves[Math.floor(Math.random() * availableMoves.length)];
+    // 使用安全的隨機數生成器選擇移動
+    return availableMoves[getSecureRandomInt(availableMoves.length)];
 }
 
 // 中等難度：混合策略
 function getMediumMove() {
     // 50% 機會使用最佳策略，50% 機會隨機
+    // 這裡使用 Math.random() 是安全的，因為只用於遊戲策略選擇
     if (Math.random() < 0.5) {
         return getBestMove();
     } else {

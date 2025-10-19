@@ -288,8 +288,8 @@ const safeRegex = /^a+$/; // 安全：線性時間複雜度
 #### 2. CWE-798: 硬編碼敏感資訊
 **修復前：**
 ```javascript
-const API_KEY = "1234567890abcdef"; // 危險：硬編碼
-const DATABASE_URL = "mongodb://admin:password123@localhost:27017/game";
+const API_KEY = "xxxxx"; // 危險：硬編碼
+const DATABASE_URL = "mongodb://admin:passxxxxx@localhost:27017/game";
 ```
 
 **修復後：**
@@ -316,10 +316,38 @@ function getApiConfig() {
    - 進行型別檢查和邊界檢查
    - 避免災難性回溯攻擊
 
-3. **敏感資訊保護**
+3. **偽隨機數生成器安全**
+   - 區分遊戲邏輯和安全敏感操作的隨機需求
+   - 提供密碼學安全的隨機數選項
+   - 詳細註解說明使用場景
+
+4. **敏感資訊保護**
    - 不在程式碼中硬編碼密碼、金鑰
    - 使用環境變數或安全的配置管理
    - 在日誌中避免輸出敏感資訊
+
+#### 3. 偽隨機數生成器安全性
+**修復前：**
+```javascript
+return availableMoves[Math.floor(Math.random() * availableMoves.length)]; // 可能不夠安全
+```
+
+**修復後：**
+```javascript
+function getSecureRandomInt(max) {
+    if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+        // 密碼學安全的隨機數生成器（適用於安全敏感操作）
+        const array = new Uint32Array(1);
+        window.crypto.getRandomValues(array);
+        return Math.floor((array[0] / (0xFFFFFFFF + 1)) * max);
+    } else {
+        // 對於遊戲邏輯，Math.random() 是足夠的
+        return Math.floor(Math.random() * max);
+    }
+}
+```
+
+**說明：** 根據使用場景選擇適當的隨機數生成器。遊戲邏輯使用 `Math.random()` 是安全的，但對於安全敏感操作（如產生 token、加密金鑰）應使用 `crypto.getRandomValues()`。
 
 ## 🔗 相關連結
 
