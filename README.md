@@ -87,7 +87,16 @@ docker logs <container-id>
 5. 選擇此專案 (202510_lab1)
 6. 點擊 "Set Up"
 
-### 2. 取得 SonarCloud Token
+### 2. 關閉自動分析（重要）
+
+**必須關閉自動分析，否則會與 CI 分析衝突！**
+
+1. 在 SonarCloud 專案頁面，點擊 "Administration" → "Analysis Method"
+2. 找到 "Automatic Analysis" 區塊
+3. 關閉 "Automatic Analysis" 開關
+4. 儲存設定
+
+### 3. 取得 SonarCloud Token
 
 1. 在 SonarCloud 中，點擊右上角的頭像
 2. 選擇 "My Account" → "Security"
@@ -95,7 +104,7 @@ docker logs <container-id>
 4. 點擊 "Generate"
 5. **立即複製並保存此 Token**（之後將無法再次查看）
 
-### 3. 設定 GitHub Secrets
+### 4. 設定 GitHub Secrets
 
 1. 前往你的 GitHub 專案頁面
 2. 點擊 "Settings" → "Secrets and variables" → "Actions"
@@ -105,7 +114,7 @@ docker logs <container-id>
    - Secret: 貼上剛才複製的 SonarCloud Token
 5. 點擊 "Add secret"
 
-### 4. 設定專案金鑰
+### 5. 設定專案金鑰
 
 SonarCloud 專案金鑰格式為：`組織名稱_專案名稱`
 
@@ -119,7 +128,7 @@ SonarCloud 專案金鑰格式為：`組織名稱_專案名稱`
 -Dsonar.projectKey=${{ github.repository_owner }}_${{ github.event.repository.name }}
 ```
 
-### 5. 驗證設定
+### 6. 驗證設定
 
 推送程式碼到 GitHub 後：
 

@@ -294,7 +294,7 @@ jobs:
           fetch-depth: 0  # 完整歷史記錄以獲得更好的分析
 
       - name: 執行 SonarCloud 掃描
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@v5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub 自動提供
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    # 需要在 GitHub Secrets 中設定
