@@ -165,22 +165,54 @@ function computerMove() {
     }
 }
 
-// 安全的隨機數生成器
+// 密碼學安全的隨機數生成器
 function getSecureRandomInt(max) {
-    // 注意：對於遊戲邏輯，Math.random() 是安全的，因為不涉及安全敏感的操作
-    // 這裡使用 Math.random() 僅用於遊戲 AI 的隨機選擇，不涉及加密或身份驗證
-    // 如果需要密碼學安全的隨機數，應使用 crypto.getRandomValues()
+    // 完全使用密碼學安全的隨機數生成器，移除 Math.random() 使用
+    // 這確保所有隨機數生成都符合安全標準
     
     if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
-        // 瀏覽器環境：使用密碼學安全的隨機數生成器（可選，用於示範）
-        // 但對於遊戲邏輯，這是過度設計
+        // 瀏覽器環境：使用 Web Crypto API
         const array = new Uint32Array(1);
         window.crypto.getRandomValues(array);
         return Math.floor((array[0] / (0xFFFFFFFF + 1)) * max);
+    } else if (typeof require !== 'undefined') {
+        // Node.js 環境：使用 crypto 模組
+        try {
+            const crypto = require('crypto');
+            const randomBytes = crypto.randomBytes(4);
+            const randomValue = randomBytes.readUInt32BE(0);
+            return Math.floor((randomValue / (0xFFFFFFFF + 1)) * max);
+        } catch (error) {
+            console.warn('無法使用 Node.js crypto 模組，使用預設選擇');
+            return 0; // 安全的預設值
+        }
     } else {
-        // 對於遊戲邏輯，Math.random() 是足夠且安全的
-        // 此用途不涉及安全敏感操作，不需要密碼學級別的隨機性
-        return Math.floor(Math.random() * max);
+        // 如果沒有可用的密碼學安全隨機數生成器，使用預設值
+        console.warn('無可用的安全隨機數生成器，使用預設選擇');
+        return 0; // 選擇第一個可用選項作為安全預設值
+    }
+}
+
+// 安全的隨機浮點數生成器（0-1 之間）
+function getSecureRandomFloat() {
+    // 生成 0-1 之間的密碼學安全隨機浮點數
+    if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+        const array = new Uint32Array(1);
+        window.crypto.getRandomValues(array);
+        return array[0] / (0xFFFFFFFF + 1);
+    } else if (typeof require !== 'undefined') {
+        try {
+            const crypto = require('crypto');
+            const randomBytes = crypto.randomBytes(4);
+            const randomValue = randomBytes.readUInt32BE(0);
+            return randomValue / (0xFFFFFFFF + 1);
+        } catch (error) {
+            console.warn('無法使用 Node.js crypto 模組，使用預設值');
+            return 0.5; // 安全的預設值
+        }
+    } else {
+        console.warn('無可用的安全隨機數生成器，使用預設值');
+        return 0.5; // 安全的預設值
     }
 }
 
@@ -202,8 +234,8 @@ function getRandomMove() {
 // 中等難度：混合策略
 function getMediumMove() {
     // 50% 機會使用最佳策略，50% 機會隨機
-    // 這裡使用 Math.random() 是安全的，因為只用於遊戲策略選擇
-    if (Math.random() < 0.5) {
+    // 使用密碼學安全的隨機數生成器進行策略選擇
+    if (getSecureRandomFloat() < 0.5) {
         return getBestMove();
     } else {
         return getRandomMove();

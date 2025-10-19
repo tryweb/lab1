@@ -329,25 +329,37 @@ function getApiConfig() {
 #### 3. 偽隨機數生成器安全性
 **修復前：**
 ```javascript
-return availableMoves[Math.floor(Math.random() * availableMoves.length)]; // 可能不夠安全
+return availableMoves[Math.floor(Math.random() * availableMoves.length)]; // ❌ 使用偽隨機數
+if (Math.random() < 0.5) { // ❌ 不安全的隨機選擇
 ```
 
 **修復後：**
 ```javascript
+// 完全移除 Math.random()，使用密碼學安全的隨機數生成器
 function getSecureRandomInt(max) {
     if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
-        // 密碼學安全的隨機數生成器（適用於安全敏感操作）
+        // 瀏覽器環境：Web Crypto API
         const array = new Uint32Array(1);
         window.crypto.getRandomValues(array);
         return Math.floor((array[0] / (0xFFFFFFFF + 1)) * max);
+    } else if (typeof require !== 'undefined') {
+        // Node.js 環境：crypto 模組
+        const crypto = require('crypto');
+        const randomBytes = crypto.randomBytes(4);
+        const randomValue = randomBytes.readUInt32BE(0);
+        return Math.floor((randomValue / (0xFFFFFFFF + 1)) * max);
     } else {
-        // 對於遊戲邏輯，Math.random() 是足夠的
-        return Math.floor(Math.random() * max);
+        return 0; // 安全的預設值
     }
+}
+
+function getSecureRandomFloat() {
+    // 生成 0-1 之間的密碼學安全隨機浮點數
+    // 替代所有 Math.random() 使用
 }
 ```
 
-**說明：** 根據使用場景選擇適當的隨機數生成器。遊戲邏輯使用 `Math.random()` 是安全的，但對於安全敏感操作（如產生 token、加密金鑰）應使用 `crypto.getRandomValues()`。
+**說明：** 完全移除了所有 `Math.random()` 的使用，改用密碼學安全的隨機數生成器。支援瀏覽器和 Node.js 環境，當無可用的安全隨機數生成器時提供安全的預設值。
 
 ## 🔗 相關連結
 
