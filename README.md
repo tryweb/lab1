@@ -87,14 +87,23 @@ docker logs <container-id>
 5. 選擇此專案 (202510_lab1)
 6. 點擊 "Set Up"
 
-### 2. 關閉自動分析（重要）
+### 2. 關閉自動分析（🚨 必須執行，否則會失敗）
 
-**必須關閉自動分析，否則會與 CI 分析衝突！**
+**⚠️ 重要：必須關閉自動分析，否則 CI 掃描會失敗並出現以下錯誤：**
+```
+ERROR You are running CI analysis while Automatic Analysis is enabled.
+Please consider disabling one or the other.
+```
 
-1. 在 SonarCloud 專案頁面，點擊 "Administration" → "Analysis Method"
-2. 找到 "Automatic Analysis" 區塊
-3. 關閉 "Automatic Analysis" 開關
-4. 儲存設定
+**操作步驟：**
+1. 進入你的 SonarCloud 專案頁面
+2. 點擊左側選單 "Administration" → "Analysis Method"
+3. 找到 "SonarCloud Automatic Analysis" 區塊
+4. **關閉**（Toggle off）"Automatic Analysis" 開關
+5. 確認顯示為 "Disabled"
+6. 設定會自動儲存
+
+> 💡 提示：自動分析和 CI 分析不能同時啟用。由於我們使用 GitHub Actions 進行 CI 掃描，因此必須關閉自動分析。
 
 ### 3. 取得 SonarCloud Token
 
