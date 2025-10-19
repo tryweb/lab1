@@ -294,6 +294,8 @@ jobs:
           fetch-depth: 0  # 完整歷史記錄以獲得更好的分析
 
       - name: 執行 SonarCloud 掃描
+        id: sonar-scan
+        continue-on-error: true
         uses: SonarSource/sonarqube-scan-action@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub 自動提供
@@ -303,12 +305,35 @@ jobs:
             -Dsonar.projectKey=${{ github.repository_owner }}_${{ github.event.repository.name }}
             -Dsonar.organization=${{ github.repository_owner }}
 
-      - name: 檢查 SonarCloud 品質門檻
+      - name: 檢查 SonarCloud 掃描結果
         if: always()
         run: |
-          echo "✅ SonarCloud 掃描完成"
-          echo "📊 詳細報告請至 SonarCloud 查看："
-          echo "   https://sonarcloud.io/dashboard?id=${{ github.repository_owner }}_${{ github.event.repository.name }}"
+          if [ "${{ steps.sonar-scan.outcome }}" == "success" ]; then
+            echo "✅ SonarCloud 掃描成功完成"
+            echo "📊 詳細報告請至 SonarCloud 查看："
+            echo "   https://sonarcloud.io/dashboard?id=${{ github.repository_owner }}_${{ github.event.repository.name }}"
+          else
+            echo "⚠️  SonarCloud 掃描失敗"
+            echo ""
+            echo "常見原因："
+            echo "1. 🚨 SonarCloud 自動分析尚未關閉（最常見）"
+            echo "   解決方法："
+            echo "   - 前往 https://sonarcloud.io/project/configuration?id=${{ github.repository_owner }}_${{ github.event.repository.name }}"
+            echo "   - 點擊 'Administration' → 'Analysis Method'"
+            echo "   - 關閉 'Automatic Analysis' 開關"
+            echo "   - 確認顯示為 'Disabled'"
+            echo ""
+            echo "2. SONAR_TOKEN 未設定或已過期"
+            echo "   - 檢查 GitHub Secrets 中的 SONAR_TOKEN"
+            echo ""
+            echo "3. 專案金鑰或組織名稱不正確"
+            echo "   - 當前專案金鑰: ${{ github.repository_owner }}_${{ github.event.repository.name }}"
+            echo "   - 當前組織: ${{ github.repository_owner }}"
+            echo ""
+            echo "📖 詳細設定步驟請參考 README.md"
+            echo ""
+            echo "⚡ 注意：此錯誤不會影響其他安全掃描的執行"
+          fi
 
   # 7. 安全掃描結果總結
   security-summary:
