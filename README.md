@@ -266,6 +266,61 @@ Pull Request 流程：
 
 如有任何問題，歡迎開 Issue 討論。
 
+## 🛡️ 安全問題修復
+
+本專案已修復 SonarCloud 檢測到的安全漏洞：
+
+### 修復的問題
+
+#### 1. CWE-1333: 正則表達式拒絕服務攻擊 (ReDoS)
+**修復前：**
+```javascript
+const riskyRegex = new RegExp('(a+)+$'); // 危險：災難性回溯
+```
+
+**修復後：**
+```javascript
+const safeRegex = /^a+$/; // 安全：線性時間複雜度
+```
+
+**說明：** 原本的正則表達式 `(a+)+$` 會造成災難性回溯，攻擊者可以構造特殊輸入導致程式掛起。修復後使用線性時間複雜度的正則表達式。
+
+#### 2. CWE-798: 硬編碼敏感資訊
+**修復前：**
+```javascript
+const API_KEY = "1234567890abcdef"; // 危險：硬編碼
+const DATABASE_URL = "mongodb://admin:password123@localhost:27017/game";
+```
+
+**修復後：**
+```javascript
+function getApiConfig() {
+    return {
+        apiKey: process.env.API_KEY || '',
+        databaseUrl: process.env.DATABASE_URL || 'mongodb://localhost:27017/game'
+    };
+}
+```
+
+**說明：** 移除了硬編碮的敏感資訊，改用環境變數管理。已建立 [`.env.example`](.env.example) 檔案作為範本。
+
+### 安全最佳實踐
+
+1. **環境變數管理**
+   - 複製 `.env.example` 為 `.env`
+   - 在 `.env` 中設定實際的敏感資訊
+   - `.env` 檔案已加入 [`.gitignore`](.gitignore)，不會被提交
+
+2. **輸入驗證**
+   - 使用安全的正則表達式
+   - 進行型別檢查和邊界檢查
+   - 避免災難性回溯攻擊
+
+3. **敏感資訊保護**
+   - 不在程式碼中硬編碼密碼、金鑰
+   - 使用環境變數或安全的配置管理
+   - 在日誌中避免輸出敏感資訊
+
 ## 🔗 相關連結
 
 - [GitHub Actions 文件](https://docs.github.com/en/actions)
@@ -275,3 +330,5 @@ Pull Request 流程：
 - [OWASP Dependency-Check](https://owasp.org/www-project-dependency-check/)
 - [Gitleaks](https://github.com/gitleaks/gitleaks)
 - [Checkov](https://www.checkov.io/)
+- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
+- [CWE 清單](https://cwe.mitre.org/)

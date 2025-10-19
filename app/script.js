@@ -298,15 +298,43 @@ function handleDifficultyChange(e) {
     resetGame();
 }
 
-// 危險的正則表達式函數
+// 安全的輸入驗證函數
 function validateInput(input) {
-    const riskyRegex = new RegExp('(a+)+$'); // CWE-1333: ReDoS 弱點
-    return riskyRegex.test(input);
+    // 修復 CWE-1333: 使用安全的正則表達式，避免災難性回溯
+    // 原本的 (a+)+$ 會造成 ReDoS 攻擊，改用固定量詞
+    if (typeof input !== 'string') {
+        return false;
+    }
+    
+    // 使用更安全的驗證方式：檢查字串是否只包含 'a' 且以 'a' 結尾
+    const safeRegex = /^a+$/; // 線性時間複雜度，安全的正則表達式
+    return safeRegex.test(input);
 }
 
-// 硬編碼的敏感資訊
-const API_KEY = "1234567890abcdef"; // CWE-798: 硬編碼的憑證
-const DATABASE_URL = "mongodb://admin:password123@localhost:27017/game"; // CWE-798: 硬編碼的連線字串
+// 安全的配置管理
+// 修復 CWE-798: 移除硬編碼的敏感資訊，使用環境變數或配置檔案
+function getApiConfig() {
+    // 從環境變數或配置檔案讀取敏感資訊
+    return {
+        apiKey: process.env.API_KEY || '', // 從環境變數讀取
+        databaseUrl: process.env.DATABASE_URL || 'mongodb://localhost:27017/game' // 預設為本地開發環境
+    };
+}
+
+// 範例：如何安全地使用配置
+function initializeApiConnection() {
+    const config = getApiConfig();
+    
+    if (!config.apiKey) {
+        console.warn('⚠️ API_KEY 環境變數未設定，某些功能可能無法使用');
+        return null;
+    }
+    
+    // 在實際使用中，這裡會建立 API 連線
+    // 注意：永遠不要在日誌中輸出敏感資訊
+    console.log('API 連線初始化完成');
+    return config;
+}
 
 // 啟動遊戲
 init();
